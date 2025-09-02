@@ -208,13 +208,12 @@
   const bgMusic = document.getElementById('bg-music');
   const clickSound = document.getElementById('click-sound');
 
-  // Game state
   let bitcoin = 0;
   let totalClicks = 0;
   let bitcoinsPerClick = 1;
   let bitcoinsPerSecond = 0;
+  let musicPlaying = false;
 
-  // Upgrades data
   const upgrades = [
     {
       id: 'bitcoin_rising',
@@ -314,7 +313,6 @@
     }
   ];
 
-  // Achievements data
   const achievements = [
     {
       id: '1mil',
@@ -353,7 +351,6 @@
     }
   ];
 
-  // Format large numbers for display
   function formatNumber(num) {
     if (num < 1_000) return num.toFixed(0);
     const units = ['K', 'M', 'B', 'T', 'Qa', 'Qi'];
@@ -366,7 +363,6 @@
     return scaled.toFixed(2) + units[unitIndex];
   }
 
-  // Save/load game
   function saveGame() {
     const saveData = {
       bitcoin,
@@ -392,145 +388,3 @@
       upgrades.forEach((u, i) => {
         u.owned = saveData.upgradesOwned[i];
       });
-    }
-
-    if (saveData.achievementsUnlocked && saveData.achievementsUnlocked.length === achievements.length) {
-      achievements.forEach((a, i) => {
-        a.unlocked = saveData.achievementsUnlocked[i];
-      });
-    }
-
-    recalcStats();
-  }
-
-  // Update UI
-  function updateUI() {
-    bitcoinCountEl.textContent = formatNumber(bitcoin);
-    perClickEl.textContent = formatNumber(bitcoinsPerClick);
-    perSecondEl.textContent = formatNumber(bitcoinsPerSecond);
-    totalClicksEl.textContent = 'Total Clicks: ' + totalClicks;
-
-    upgradesContainer.innerHTML = '';
-    upgrades.forEach(upg => {
-      const div = document.createElement('div');
-      div.className = 'upgrade';
-      if (bitcoin < upg.cost) div.classList.add('disabled');
-      div.innerHTML = `
-        <h3>${upg.name}</h3>
-        <p>Cost: <span class="cost">${formatNumber(upg.cost)}</span></p>
-        <p>+${upg.perClick} per click, +${upg.perSecond} per second</p>
-        <p>Owned: ${upg.owned}</p>
-      `;
-      div.addEventListener('click', () => buyUpgrade(upg.id));
-      upgradesContainer.appendChild(div);
-    });
-
-    updateAchievementsUI();
-  }
-
-  // Buy upgrade
-  function buyUpgrade(id) {
-    const upg = upgrades.find(u => u.id === id);
-    if (!upg) return;
-    if (bitcoin < upg.cost) return;
-
-    bitcoin -= upg.cost;
-    upg.owned++;
-    upg.cost = Math.floor(upg.cost * 1.15); // increase cost by 15% each purchase
-
-    recalcStats();
-    updateUI();
-    saveGame();
-  }
-
-  // Recalculate stats
-  function recalcStats() {
-    bitcoinsPerClick = 1; // base
-    bitcoinsPerSecond = 0;
-    upgrades.forEach(u => {
-      bitcoinsPerClick += u.perClick * u.owned;
-      bitcoinsPerSecond += u.perSecond * u.owned;
-    });
-  }
-
-  // Add bitcoins per second continuously
-  setInterval(() => {
-    bitcoin += bitcoinsPerSecond / 10;
-    checkAchievements();
-    updateUI();
-    saveGame();
-  }, 100);
-
-  // Click handler
-  bitcoinBtn.addEventListener('click', () => {
-    bitcoin += bitcoinsPerClick;
-    totalClicks++;
-    checkAchievements();
-    updateUI();
-    saveGame();
-    playClickSound();
-  });
-
-  // Achievements
-  function checkAchievements() {
-    achievements.forEach(a => {
-      if (!a.unlocked && a.condition()) {
-        a.unlocked = true;
-        showAchievementToast(a.name);
-        saveGame();
-      }
-    });
-  }
-
-  // Show achievement UI update
-  function updateAchievementsUI() {
-    achievementsList.innerHTML = '';
-    achievements.forEach(a => {
-      const div = document.createElement('div');
-      div.className = 'achievement ' + (a.unlocked ? 'unlocked' : '');
-      div.textContent = `${a.name} - ${a.desc}`;
-      achievementsList.appendChild(div);
-    });
-  }
-
-  // Achievement toast notification
-  function showAchievementToast(name) {
-    const toast = document.createElement('div');
-    toast.textContent = `Achievement Unlocked: ${name}! 🎉`;
-    toast.style.position = 'fixed';
-    toast.style.bottom = '20px';
-    toast.style.left = '50%';
-    toast.style.transform = 'translateX(-50%)';
-    toast.style.background = '#f7931a';
-    toast.style.color = '#111';
-    toast.style.padding = '10px 25px';
-    toast.style.borderRadius = '25px';
-    toast.style.fontWeight = 'bold';
-    toast.style.boxShadow = '0 0 10px #f7931a';
-    toast.style.zIndex = '10000';
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      toast.style.transition = 'opacity 1s ease';
-      toast.style.opacity = '0';
-      setTimeout(() => document.body.removeChild(toast), 1000);
-    }, 3000);
-  }
-
-  // Show/hide achievements screen
-  achievementsBtn.addEventListener('click', () => {
-    updateAchievementsUI();
-    achievementsScreen.style.display = 'flex';
-  });
-  closeAchievementsBtn.addEventListener('click', () => {
-    achievementsScreen.style.display = 'none';
-  });
-
-  // Background music play/pause toggle
-  let musicPlaying = false;
-  bgMusic.volume = 0.3;
-  // Auto play on first click
-  bitcoinBtn.addEventListener('click', () => {
-    if (!musicPlaying) {
-      bgMusic.play().catch(() => {});
-      musicPlaying = true;
-    }
