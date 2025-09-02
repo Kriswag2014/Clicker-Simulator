@@ -1,214 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Bitcoin Clicker 💰</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Bitcoin Clicker</title>
   <style>
-    /* Same modern dark-themed CSS as before, trimmed for brevity */
     body {
-      margin: 0;
-      font-family: 'Orbitron', monospace;
-      background-color: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background-color: #1e1e1e;
+      color: #f1f1f1;
+      font-family: Arial, sans-serif;
+      text-align: center;
       padding: 20px;
     }
     h1 {
       color: #f7931a;
-      text-shadow: 0 0 10px #f7931a;
-    }
-    #clickButton {
-      font-size: 24px;
-      padding: 20px 40px;
-      border-radius: 10px;
-      border: none;
-      background: linear-gradient(45deg, #f7931a, #ffcc00);
-      color: #111;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 12px #f7931a80;
-      margin: 20px;
-    }
-    #clickButton:active {
-      transform: scale(0.98);
-      box-shadow: 0 2px 6px #f7931a60;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      width: 100%;
-      max-width: 1000px;
-    }
-    .panel {
-      background: #222;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: inset 0 0 10px #000;
     }
     button {
-      background: #f7931a;
+      background-color: #f7931a;
       border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      color: #111;
-      font-weight: bold;
+      color: #1e1e1e;
+      font-size: 18px;
+      padding: 15px 30px;
+      margin: 10px;
+      border-radius: 10px;
       cursor: pointer;
-      margin-top: 5px;
     }
     button:disabled {
-      background: #666;
+      background-color: #555;
       cursor: not-allowed;
     }
+    .section {
+      margin: 20px auto;
+      max-width: 800px;
+      background-color: #2b2b2b;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .upgrade {
+      margin: 10px;
+      padding: 10px;
+      background-color: #3a3a3a;
+      border-radius: 8px;
+    }
     .achievement {
-      margin: 5px 0;
-      padding: 8px;
-      border-radius: 6px;
-      background-color: #333;
-      color: #ccc;
+      padding: 10px;
+      margin: 5px;
+      background-color: #444;
+      border-radius: 5px;
     }
     .achievement.unlocked {
-      background: #f7931a;
-      color: #111;
+      background-color: #f7931a;
+      color: #1e1e1e;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-<h1>Bitcoin Clicker 💰</h1>
-<p><strong>BitCoins:</strong> <span id="bitcoin">0</span></p>
-<p><strong>Per Click:</strong> <span id="perClick">1</span> | <strong>Per Second:</strong> <span id="perSecond">0</span></p>
-<p><strong>Total Clicks:</strong> <span id="totalClicks">0</span></p>
+  <h1>💰 Bitcoin Clicker 💰</h1>
 
-<!-- 👇 CLICK SOUND HERE -->
-<audio id="clickSound" src="https://cdn.pixabay.com/audio/2021/08/04/audio_62b1e3a37e.mp3" preload="auto"></audio>
+  <p><strong>BitCoins:</strong> <span id="bitcoin">0</span></p>
+  <p><strong>Per Click:</strong> <span id="perClick">1</span> |
+     <strong>Per Second:</strong> <span id="perSecond">0</span></p>
+  <p><strong>Total Clicks:</strong> <span id="totalClicks">0</span></p>
 
-<button id="clickButton">💸 Click to earn BitCoins</button>
+  <button id="clickButton">Click for BitCoins</button>
 
-<div class="container">
-  <div class="panel">
-    <h2>Upgrades</h2>
-    <div id="upgrades"></div>
+  <div class="section">
+    <h2>🛠️ Upgrades</h2>
+    <div id="upgradeContainer"></div>
   </div>
-  <div class="panel">
-    <h2>Achievements</h2>
-    <button onclick="toggleAchievements()">Toggle Achievements</button>
-    <div id="achievementsList" style="margin-top: 10px;"></div>
+
+  <div class="section">
+    <h2>🏆 Achievements</h2>
+    <div id="achievementContainer"></div>
   </div>
-</div>
 
-<script>
-  let bitcoin = 0;
-  let perClick = 1;
-  let perSecond = 0;
-  let totalClicks = 0;
+  <!-- 🔊 Click sound -->
+  <audio id="clickSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9c2c6e7fb.mp3"></audio>
 
-  const upgrades = [
-    { name: "BitCoin Is Raising In net Worth", cost: 50, click: 1, sec: 0 },
-    { name: "Going Up In Prize", cost: 100, click: 0, sec: 1 },
-    { name: "More BitCoins", cost: 500, click: 5, sec: 0 },
-    { name: "BitCoin Farm", cost: 1500, click: 0, sec: 2.5 },
-    { name: "Better Called BitCoin", cost: 2500, click: 10, sec: 0 },
-    { name: "Better BitCoin Farms", cost: 5000, click: 0, sec: 15 },
-    { name: "Hmm I Think There Is Enough", cost: 10250, click: 25, sec: 0 },
-    { name: "BitCoin Factory", cost: 15000, click: 0, sec: 25 },
-    { name: "Never Enough BitCoin", cost: 30000, click: 100, sec: 0 },
-    { name: "BitCoin Is To Good Of A Coin", cost: 50000, click: 0, sec: 100 },
-    { name: "BitCoin Planet", cost: 100000, click: 0, sec: 500 },
-    { name: "BITCOIN GALAXY", cost: 1000000, click: 0, sec: 2500 },
-  ];
+  <!-- 🎵 Background music (chill lofi) -->
+  <audio id="bgMusic" src="https://cdn.pixabay.com/audio/2023/01/09/audio_b3b12a30f6.mp3" autoplay loop></audio>
 
-  const achievements = [
-    { name: "1Mil", condition: () => bitcoin >= 1_000_000 },
-    { name: "1Bil", condition: () => bitcoin >= 1_000_000_000 },
-    { name: "1Tri", condition: () => bitcoin >= 1_000_000_000_000 },
-    { name: "You Got The Bit Coin Galaxy", condition: () => getUpgrade("BITCOIN GALAXY").count > 0 },
-    { name: "You Beat The Game", condition: () => bitcoin >= 1_000_000_000_000_000 },
-    { name: "Click Master", condition: () => totalClicks >= 10000 },
-  ];
+  <script>
+    // Core variables
+    let bitcoin = 0;
+    let perClick = 1;
+    let perSecond = 0;
+    let totalClicks = 0;
 
-  let ownedUpgrades = {};
-  let unlockedAchievements = {};
+    const upgrades = [
+      { name: "BitCoin Is Raising In net Worth", cost: 50, click: 1, sec: 0 },
+      { name: "Going Up In Prize", cost: 100, click: 0, sec: 1 },
+      { name: "More BitCoins", cost: 500, click: 5, sec: 0 },
+      { name: "BitCoin Farm", cost: 1500, click: 0, sec: 2.5 },
+      { name: "Better Called BitCoin", cost: 2500, click: 10, sec: 0 },
+      { name: "Better BitCoin Farms", cost: 5000, click: 0, sec: 15 },
+      { name: "Hmm I Think There Is Enough", cost: 10250, click: 25, sec: 0 },
+      { name: "BitCoin Factory", cost: 15000, click: 0, sec: 25 },
+      { name: "Never Enough BitCoin", cost: 30000, click: 100, sec: 0 },
+      { name: "BitCoin Is To Good Of A Coin", cost: 50000, click: 0, sec: 100 },
+      { name: "BitCoin Planet", cost: 100000, click: 0, sec: 500 },
+      { name: "BITCOIN GALAXY", cost: 1000000, click: 0, sec: 2500 }
+    ];
 
-  const bitcoinDisplay = document.getElementById("bitcoin");
-  const perClickDisplay = document.getElementById("perClick");
-  const perSecondDisplay = document.getElementById("perSecond");
-  const totalClicksDisplay = document.getElementById("totalClicks");
-  const upgradesDiv = document.getElementById("upgrades");
-  const achievementsList = document.getElementById("achievementsList");
+    const achievements = [
+      { name: "1Mil", description: "Reach 1,000,000 BTC", condition: () => bitcoin >= 1_000_000 },
+      { name: "1Bil", description: "Reach 1,000,000,000 BTC", condition: () => bitcoin >= 1_000_000_000 },
+      { name: "1Tri", description: "Reach 1,000,000,000,000 BTC", condition: () => bitcoin >= 1_000_000_000_000 },
+      { name: "You Got The Bit Coin Galaxy", description: "Buy BITCOIN GALAXY", condition: () => upgradeCounts["BITCOIN GALAXY"] > 0 },
+      { name: "You Beat The Game", description: "Reach 1,000,000,000,000,000 BTC", condition: () => bitcoin >= 1_000_000_000_000_000 },
+      { name: "Click Master", description: "Reach 10,000 Total Clicks", condition: () => totalClicks >= 10000 }
+    ];
 
-  const clickSound = document.getElementById("clickSound");
+    const upgradeCounts = {};
+    const unlockedAchievements = {};
 
-  function updateUI() {
-    bitcoinDisplay.textContent = Math.floor(bitcoin);
-    perClickDisplay.textContent = perClick;
-    perSecondDisplay.textContent = perSecond;
-    totalClicksDisplay.textContent = totalClicks;
-    drawUpgrades();
-    drawAchievements();
-  }
+    const bitcoinEl = document.getElementById("bitcoin");
+    const perClickEl = document.getElementById("perClick");
+    const perSecondEl = document.getElementById("perSecond");
+    const totalClicksEl = document.getElementById("totalClicks");
+    const upgradeContainer = document.getElementById("upgradeContainer");
+    const achievementContainer = document.getElementById("achievementContainer");
 
-  function clickBitcoin() {
-    clickSound.currentTime = 0;
-    clickSound.play();
-    bitcoin += perClick;
-    totalClicks++;
-    updateUI();
-    saveGame();
-  }
+    const clickSound = document.getElementById("clickSound");
 
-  function drawUpgrades() {
-    upgradesDiv.innerHTML = "";
-    upgrades.forEach((upg) => {
-      if (!ownedUpgrades[upg.name]) ownedUpgrades[upg.name] = 0;
-      const btn = document.createElement("button");
-      btn.innerText = `${upg.name} (+${upg.click || upg.sec} ${upg.click ? "CPC" : "CPS"}) | ${upg.cost} BTC | Owned: ${ownedUpgrades[upg.name]}`;
-      btn.onclick = () => buyUpgrade(upg);
-      if (bitcoin < upg.cost) btn.disabled = true;
-      upgradesDiv.appendChild(btn);
-    });
-  }
-
-  function buyUpgrade(upg) {
-    if (bitcoin >= upg.cost) {
-      bitcoin -= upg.cost;
-      perClick += upg.click;
-      perSecond += upg.sec;
-      ownedUpgrades[upg.name]++;
-      updateUI();
+    document.getElementById("clickButton").addEventListener("click", () => {
+      clickSound.currentTime = 0;
+      clickSound.play();
+      bitcoin += perClick;
+      totalClicks++;
+      updateDisplay();
+      checkAchievements();
       saveGame();
-    }
-  }
-
-  function getUpgrade(name) {
-    return { count: ownedUpgrades[name] || 0 };
-  }
-
-  function drawAchievements() {
-    achievementsList.innerHTML = "";
-    achievements.forEach((ach) => {
-      if (!unlockedAchievements[ach.name] && ach.condition()) {
-        unlockedAchievements[ach.name] = true;
-        alert("Achievement Unlocked: " + ach.name);
-      }
-      const div = document.createElement("div");
-      div.className = "achievement";
-      if (unlockedAchievements[ach.name]) div.classList.add("unlocked");
-      div.textContent = ach.name;
-      achievementsList.appendChild(div);
     });
-  }
 
-  function toggleAchievements() {
-    achievementsList.style.display = achievementsList.style.display === "none" ? "block" : "none";
-  }
+    function createUpgrades() {
+      upgrades.forEach(upg => {
+        upgradeCounts[upg.name] = 0;
 
-  document.getElementById("clickButton").onclick = clickBitcoin;
+        const div = document.createElement("div");
+        div.className = "upgrade";
+        const btn = document.createElement("button");
+        btn.textContent = `Buy "${upg.name}" - ${upg.cost} BTC`;
+        btn.onclick = () => {
+          if (bitcoin >= upg.cost) {
+            bitcoin -= upg.cost;
+            perClick += upg.click;
+            perSecond += upg.sec;
+            upgradeCounts[upg.name]++;
+            updateDisplay();
+            checkAchievements();
+            saveGame();
+          }
+        };
+        div.appendChild(btn);
+        upgradeContainer.appendChild(div);
+      });
+    }
 
-  setInterval(() => {
-    bitcoin += perSecond;
-    updateUI();
-  }, 
+    function createAchievements() {
+      achievements.forEach(ach => {
+        unlockedAchievements[ach.name] = false;
+        const div = document.createElement("div");
+        div.className = "achievement";
+        div.id = `ach-${ach.name}`;
+        div.textContent = `${ach.name} - Locked`;
+        achievementContainer.appendChild(div);
+      });
+    }
+
+    function checkAchievements() {
+      achievements.forEach(ach => {
+        if (!unlockedAchievements[ach.name] && ach.condition()) {
+          unlockedAchievements[ach.name] = true;
+          const el = document.getElementById(`ach-${ach.name}`);
+          el.classList.add("unlocked");
+          el.textContent = `${ach.name} - ${ach.description}`;
+          alert("Achievement unlocked: " + ach.name);
+        }
+      });
+    }
+
+    function updateDisplay() {
+      bitcoinEl.textContent = Math.floor(bitcoin);
+      perClickEl.textContent = perClick;
+      perSecondEl.textContent = perSecond;
+      totalClicksEl.textContent = totalClicks;
+    }
+
+    // Passive income every second
+    setInterval(() => {
+      bitcoin += perSecond;
+      updateDisplay();
+      checkAchievements();
+      saveGame();
+    }, 1000);
+
+    // Save/load
+    function saveGame() {
+      const save = {
+        bitcoin, perClick, perSecond, totalClicks, upgradeCounts, unlockedAchievements
+      };
+      localStorage.setItem("btcClickerSave", JSON.stringify(save));
+    }
+
+    function loadGame() {
+      const save = JSON.parse(localStorage.getItem("btcClickerSave"));
+      if (save) {
+        bitcoin = save.bitcoin || 0;
+        perClick = save.perClick || 1;
+        perSecond = save.perSecond || 0;
+       
